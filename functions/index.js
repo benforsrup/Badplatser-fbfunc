@@ -23,10 +23,12 @@ exports.fetchTopRatedCall = functions.https.onCall((data, context) => {
     return o;
 });
 
-exports.getWithinDistanceRequest = functions.https.onRequest((request, response) => {
-    let a = 1;
-    let b = a + a;
-    console.log(request.body);
-    response.send('All places withing distance, AND: ' + request.body);
-
-   });
+exports.getWithinDistanceRequest = functions.https.onRequest((req, res) => {
+    if(!req.body.lat || !req.body.long) {
+        res.sendStatus(400);
+    }
+    console.log('content-type: ' +req.get('content-type'));
+    let lat = req.body.lat;
+    let long = req.body.long; 
+    res.status(200).send(`lat ${lat} and long ${long}`);
+});
