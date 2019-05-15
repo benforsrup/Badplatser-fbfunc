@@ -36,26 +36,31 @@ exports.getWithinDistanceRequest = functions.https.onRequest((req, res) => {
     
     let data = ref.get()
     .then(snapShot => {
-        let promises = []
+        console.log('Got the documents.')
+        let a = []
         snapShot.forEach(document => {
-            const { feature } = document.data();
-            promises.push(feature);
+            const { feature } = document.data()
+            const { name } = document.data()
+            console.log('The name is ' + name)
+            // console.log('Document feature: ' + feature)
+            a.push(feature)
         });
-        return Promise.all(promises);   
+        return a;   
     })
     .then(features => {
         const results = [];
         features.forEach(feature => {
             const id = feature.id;
             results.push(id);
-            console.log('feature.id = ' + id);
+            // console.log('feature.id = ' + id);
+            // console.log('feature.geometry.coordinates = ' + feature.geometry.coordinates);
         })
-        res.send(results);
-        return results;
+        res.status(200).send("Here's a response! " + results);
+        return results; // welp
     })
     .catch((error) => {
         console.log(error)
-        res.status(500).send(error);
+        res.status(500).send(error)
     })
 
 
@@ -66,7 +71,7 @@ exports.getWithinDistanceRequest = functions.https.onRequest((req, res) => {
     let long = parseFloat(req.body.long);
 
     let dist = distance(lat, long, 59.835229, 17.655732);
-    res.status(200).send("Here's a response! " + data);
+    // res.status(200).send("Here's a response! " + data);
     // TODO return sorted array with IDs
 });
 
