@@ -53,6 +53,7 @@ exports.getWithinDistanceRequest = functions.https.onRequest((req, res) => {
     })
     .then(features => {
         let results = [];
+        let map = new Map();
 
         features.forEach(feature => {
             const id = feature.id;
@@ -63,15 +64,17 @@ exports.getWithinDistanceRequest = functions.https.onRequest((req, res) => {
             // result.push(dist);
 
             if (dist <= maxDistance) {
-                console.log(dist + 'km to ' + feature.properties.NAMN);
                 let i = 0;
+                console.log(dist + 'km to ' + feature.properties.NAMN);
                 for (; i < results.length; i++) {
-                    if (dist <= results[i]) { // TODO put distance in these entries somehow
+                    let tmpName = results[i].properties.NAMN;
+                    if (dist <= map[tmpName]) {
                         break;
                     }
                 }
                 console.log('splice on index ' + i);
                 results.splice(i, 0, feature);
+                map[feature.properties.NAMN] = dist;
             }    
         });
 
