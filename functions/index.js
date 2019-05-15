@@ -32,20 +32,23 @@ exports.getWithinDistanceRequest = functions.https.onRequest((req, res) => {
     //     res.sendStatus(400);
     // }
     
-    let ref = admin.firestore().collection('badlocations').where('feature.properties.KMN_NAMN', "==", "Stockholm");
+    // console.log('content-type: ' + req.get('content-type'));
+    let lat = parseFloat(req.body.lat);
+    let long = parseFloat(req.body.long);
     
+    let ref = admin.firestore().collection('badlocations').where('feature.properties.KMN_NAMN', "==", "Stockholm");
+
     let data = ref.get()
-    .then(snapShot => {
+    .then(locations => {
         console.log('Got the documents.')
-        let a = []
-        snapShot.forEach(document => {
+        let features = []
+        locations.forEach(document => {
             const { feature } = document.data()
-            const { name } = document.data()
-            console.log('The name is ' + name)
+            // console.log('The name is ' + feature.properties.NAMN)
             // console.log('Document feature: ' + feature)
-            a.push(feature)
+            features.push(feature)
         });
-        return a;   
+        return features;
     })
     .then(features => {
         const results = [];
@@ -53,25 +56,31 @@ exports.getWithinDistanceRequest = functions.https.onRequest((req, res) => {
             const id = feature.id;
             results.push(id);
             // console.log('feature.id = ' + id);
-            // console.log('feature.geometry.coordinates = ' + feature.geometry.coordinates);
+            // console.log('feature.geometry.coordinates = ' + feature.geometry.coordinates[1]);
+            const tmpLong = parseFloat(feature.geometry.coordinates[0]);
+            const tmpLat = parseFloat(feature.geometry.coordinates[1]);
+            const dist = distance(lat, long, tmpLat, tmpLong);
+            console.log('Distance to ' + feature.properties.NAMN + 'is ' + dist + 'km');
+            // result.push(dist);
         })
         res.status(200).send("Here's a response! " + results);
         return results; // welp
     })
+    // .then(ids => {
+    //     console.log('heyoo we got the ids');
+    //     return ids;
+    // })
     .catch((error) => {
         console.log(error)
         res.status(500).send(error)
     })
 
+    // console.log('data is: ' + data);
 
-    console.log('data is: ' + data);
-
-    // console.log('content-type: ' + req.get('content-type'));
-    let lat = parseFloat(req.body.lat);
-    let long = parseFloat(req.body.long);
-
-    let dist = distance(lat, long, 59.835229, 17.655732);
-    // res.status(200).send("Here's a response! " + data);
+   
+    // let dist = distance(lat, long, 59.835229, 17.655732);
+   
+    // res.status(200).send("Distance to Uppsala " + data);
     // TODO return sorted array with IDs
 });
 
