@@ -28,13 +28,14 @@ exports.fetchTopRatedCall = functions.https.onCall((data, context) => {
 
 exports.getWithinDistanceRequest = functions.https.onRequest((req, res) => {
     
-    // if(!req.body.lat || !req.body.long) {
-    //     res.sendStatus(400);
-    // }
+    if(!req.body.lat || !req.body.long) {
+        res.sendStatus(400);
+    }
     
     // console.log('content-type: ' + req.get('content-type'));
     let lat = parseFloat(req.body.lat);
     let long = parseFloat(req.body.long);
+    let maxDistance = parseFloat(req.body.distance);
     
     let ref = admin.firestore().collection('badlocations').where('feature.properties.KMN_NAMN', "==", "Stockholm");
 
@@ -54,34 +55,25 @@ exports.getWithinDistanceRequest = functions.https.onRequest((req, res) => {
         const results = [];
         features.forEach(feature => {
             const id = feature.id;
-            results.push(id);
-            // console.log('feature.id = ' + id);
-            // console.log('feature.geometry.coordinates = ' + feature.geometry.coordinates[1]);
             const tmpLong = parseFloat(feature.geometry.coordinates[0]);
             const tmpLat = parseFloat(feature.geometry.coordinates[1]);
             const dist = distance(lat, long, tmpLat, tmpLong);
             console.log('Distance to ' + feature.properties.NAMN + 'is ' + dist + 'km');
             // result.push(dist);
-        })
-        res.status(200).send("Here's a response! " + results);
+            if (dist <= maxDistance) {
+                results.push(feature.properties.NAMN); // TODO push the correct things.
+            }
+        });
+        res.status(200).send('These places are withing the given distance: ' + results);
         return results; // welp
     })
-    // .then(ids => {
-    //     console.log('heyoo we got the ids');
-    //     return ids;
-    // })
     .catch((error) => {
         console.log(error)
         res.status(500).send(error)
     })
 
-    // console.log('data is: ' + data);
-
-   
-    // let dist = distance(lat, long, 59.835229, 17.655732);
-   
-    // res.status(200).send("Distance to Uppsala " + data);
     // TODO return sorted array with IDs
+
 });
 
 // Return distance between coordinates in km
