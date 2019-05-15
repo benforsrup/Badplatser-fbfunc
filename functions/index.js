@@ -41,7 +41,7 @@ exports.getWithinDistanceRequest = functions.https.onRequest((req, res) => {
 
     let data = ref.get()
     .then(locations => {
-        console.log('Got the documents.')
+        // console.log('Got the documents.')
         let features = []
         locations.forEach(document => {
             const { feature } = document.data()
@@ -52,19 +52,36 @@ exports.getWithinDistanceRequest = functions.https.onRequest((req, res) => {
         return features;
     })
     .then(features => {
-        const results = [];
+        let results = [];
+
         features.forEach(feature => {
             const id = feature.id;
             const tmpLong = parseFloat(feature.geometry.coordinates[0]);
             const tmpLat = parseFloat(feature.geometry.coordinates[1]);
             const dist = distance(lat, long, tmpLat, tmpLong);
-            console.log('Distance to ' + feature.properties.NAMN + 'is ' + dist + 'km');
+            // console.log('Distance to ' + feature.properties.NAMN + 'is ' + dist + 'km');
             // result.push(dist);
+
             if (dist <= maxDistance) {
-                results.push(feature.properties.NAMN); // TODO push the correct things.
-            }
+                console.log(dist + 'km to ' + feature.properties.NAMN);
+                let i = 0;
+                for (; i < results.length; i++) {
+                    if (dist <= results[i]) { // TODO put distance in these entries somehow
+                        break;
+                    }
+                }
+                console.log('splice on index ' + i);
+                results.splice(i, 0, feature);
+            }    
         });
-        res.status(200).send('These places are withing the given distance: ' + results);
+
+        // For testing purposes. TODO remove it.
+        names = [];
+        results.forEach(thing => {
+            names.push(thing.properties.NAMN);
+        });
+
+        res.status(200).send('These places are within the given distance: ' + names);
         return results; // welp
     })
     .catch((error) => {
@@ -72,7 +89,7 @@ exports.getWithinDistanceRequest = functions.https.onRequest((req, res) => {
         res.status(500).send(error)
     })
 
-    // TODO return sorted array with IDs
+    // TODO return sorted array with IDs. Closest place first.
 
 });
 
