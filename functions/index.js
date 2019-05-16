@@ -65,7 +65,7 @@ exports.getWithinDistanceRequest = functions.https.onRequest((req, res) => {
 
             if (dist <= maxDistance) {
                 let i = 0;
-                console.log(dist + 'km to ' + feature.properties.NAMN);
+                // console.log(dist + 'km to ' + feature.properties.NAMN);
                 for (; i < results.length; i++) {
                     let tmpName = results[i].properties.NAMN;
                     if (dist <= map[tmpName]) {
