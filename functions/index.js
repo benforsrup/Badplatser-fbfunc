@@ -25,6 +25,72 @@ exports.fetchTopRatedCall = functions.https.onCall((data, context) => {
     return o;
 });
 
+// Returns n closest badplatser.
+exports.getClosestRequest = functions.https.onRequest((req, res) => { 
+    
+    if(!req.body.lat || !req.body.long) {
+        res.sendStatus(400);
+    }
+
+    const lat = parseFloat(req.body.lat);
+    const long = parseFloat(req.body.long);
+    const maxDistance = parseFloat(req.body.long);
+    const n = parseFloat(req.body.n);
+
+    
+    let ref = admin.firestore().collection('badlocations').where('feature.properties.KMN_NAMN', "==", "Stockholm");
+
+    let data = ref.get()
+    .then(locations => {
+        let features = []
+        locations.forEach(document => {
+            const { feature } = document.data()
+            features.push(feature)
+        });
+        return features;
+    })
+    .then(features => {
+        let results = [];
+        let map = new Map();
+
+        features.forEach(feature => {
+            const id = feature.id;
+            const tmpLong = parseFloat(feature.geometry.coordinates[0]);
+            const tmpLat = parseFloat(feature.geometry.coordinates[1]);
+            const dist = distance(lat, long, tmpLat, tmpLong);
+
+            if (dist <= maxDistance) {
+                let i = 0;
+                for (; i < results.length; i++) {
+                    let tmpName = results[i].properties.NAMN;
+                    if (dist <= map[tmpName]) {
+                        break;
+                    }
+                }
+                console.log('splice on index ' + i);
+                results.splice(i, 0, feature);
+                map[feature.properties.NAMN] = dist;
+            }    
+        });
+
+        // Slice down the results to fit request
+        results = results.slice(0, n);
+
+        // For testing purposes. TODO remove it.
+        names = [];
+        results.forEach(thing => {
+            names.push(thing.properties.NAMN);
+        });
+
+        res.status(200).send('These places are within the given distance: ' + names);
+        return results; // welp
+    })
+    .catch((error) => {
+        console.log(error)
+        res.status(500).send(error)
+    })
+
+})
 
 exports.getWithinDistanceRequest = functions.https.onRequest((req, res) => {
     
