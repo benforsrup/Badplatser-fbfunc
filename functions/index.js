@@ -4,12 +4,9 @@ admin.initializeApp(functions.config().firebase);
 
 // // Create and Deploy Your First Cloud Functions
 // // https://firebase.google.com/docs/functions/write-firebase-functions
-// postman friendly
-exports.helloWorld = functions.https.onRequest((request, response) => {
- response.send("Hello from Firebase!");
-});
 
 //response.send({object})
+// postman friendly
 exports.fetchTopRatedRequest = functions.https.onRequest((request, response) => {
     let o = {
         text: 'testing'
@@ -25,39 +22,75 @@ exports.fetchTopRatedCall = functions.https.onCall((data, context) => {
     return o;
 });
 
+
 // Returns ID for badplats with highest meassured temperature.
-// exports.getHighestTemp = functions.https.onRequest((req, res) => { 
-//     let ref = admin.firestore().collection('badlocations').where('feature.properties.KMN_NAMN', "==", "Stockholm");
-//     let temps = Map();
-//     let data = ref.get()
-//     .then(locations => {
-//         let maxTemp;
-//         locations.forEach(document => {
-//             const { feature } = document.data();
-//             const { details } = document.data();
-//             const id = feature.id;
-//             const temp = details.sampleTemperature;
+exports.getHighestTempCall = functions.https.onCall((data, context) => {
+    let ref = admin.firestore().collection('badlocations').where('feature.properties.KMN_NAMN', "==", "Stockholm");
+    let temps = new Map();
+    let useless = ref.get()
+    .then(locations => {
+        let maxTemp;
+        let maxTempID;
+        locations.forEach(document => {
+            const { feature } = document.data();
+            const { details } = document.data();
+            const id = feature.id;
+            const temp = details.sampleTemperature;
 
-//             if (temp) {
-//                 temps[id] = temp;
-//                 if (temp > maxTemp) {
-//                     maxTemp = temp;
-//                 }
-//             }
-//             return maxTemp;
-//         });
-//         return details;
-//     })
-//     .then(maxTemp => {
-//         res.status(200).send('The hottest place right now is ' + maxTemp);
-//         return results;
-//     })
-//     .catch((error) => {
-//         console.log(error)
-//         res.status(500).send(error)
-//     })
+            if (temp) {
+                temps[id] = temp;
+                if (temp > maxTemp || !maxTemp) {
+                    maxTemp = temp;
+                    maxTempID = id;
+                }
+            }
+        });
+        return maxTempID;
+    })
+    .then(maxTempID => {
+        // console.log('Maxtemp stuff: ' + maxTempID + ', ' + temps[maxTempID]);
+        return { result: maxTempID };
+    })
+    .catch((error) => {
+        console.log(error)
+        return error;
+    })
+});
 
-// });
+// Returns ID for badplats with highest meassured temperature.
+exports.getHighestTempRequest = functions.https.onRequest((req, res) => {
+    let ref = admin.firestore().collection('badlocations').where('feature.properties.KMN_NAMN', "==", "Stockholm");
+    let temps = new Map();
+    let useless = ref.get()
+    .then(locations => {
+        let maxTemp;
+        let maxTempID;
+        locations.forEach(document => {
+            const { feature } = document.data();
+            const { details } = document.data();
+            const id = feature.id;
+            const temp = details.sampleTemperature;
+
+            if (temp) {
+                temps[id] = temp;
+                if (temp > maxTemp || !maxTemp) {
+                    maxTemp = temp;
+                    maxTempID = id;
+                }
+            }
+        });
+        return maxTempID;
+    })
+    .then(maxTempID => {
+        // console.log('Maxtemp stuff: ' + maxTempID + ', ' + temps[maxTempID]);
+        res.status(200).send(maxTempID);
+        return maxTempID;
+    })
+    .catch((error) => {
+        console.log(error)
+        res.status(500).send(error)
+    })
+});
 
 
 // Returns n closest badplatser.
@@ -69,7 +102,7 @@ exports.getClosestRequest = functions.https.onRequest((req, res) => {
 
     const lat = parseFloat(req.body.lat);
     const long = parseFloat(req.body.long);
-    const maxDistance = parseFloat(req.body.long);
+    const maxDistance = parseFloat(req.body.distance);
     const n = parseFloat(req.body.n);
 
     let ref = admin.firestore().collection('badlocations').where('feature.properties.KMN_NAMN', "==", "Stockholm");
@@ -125,23 +158,18 @@ exports.getClosestRequest = functions.https.onRequest((req, res) => {
 
 })
 
-
 // Returns n closest badplatser.
-exports.getClosestCall = functions.https.onCall((req, res) => { 
+exports.getClosestCall = functions.https.onCall((data, context) => { 
     
-    if(!req.body.lat || !req.body.long) {
-        res.sendStatus(400);
-    }
+    const lat = parseFloat(data.lat);
+    const long = parseFloat(data.long);
+    const maxDistance = parseFloat(data.distance);
+    const n = parseFloat(data.n);
+    console.log('Input: ' + lat + ', ' + long + ', ' + distance + ', ' + n);
 
-    const lat = parseFloat(req.body.lat);
-    const long = parseFloat(req.body.long);
-    const maxDistance = parseFloat(req.body.long);
-    const n = parseFloat(req.body.n);
-
-    
     let ref = admin.firestore().collection('badlocations').where('feature.properties.KMN_NAMN', "==", "Stockholm");
 
-    let data = ref.get()
+    let useless = ref.get()
     .then(locations => {
         let features = []
         locations.forEach(document => {
@@ -151,7 +179,7 @@ exports.getClosestCall = functions.https.onCall((req, res) => {
         return features;
     })
     .then(features => {
-        let results = [];
+        let result = [];
         let map = new Map();
 
         features.forEach(feature => {
@@ -162,36 +190,35 @@ exports.getClosestCall = functions.https.onCall((req, res) => {
 
             if (dist <= maxDistance) {
                 let i = 0;
-                for (; i < results.length; i++) {
-                    let tmpName = results[i].properties.NAMN;
+                for (; i < result.length; i++) {
+                    let tmpName = result[i].properties.NAMN;
                     if (dist <= map[tmpName]) {
                         break;
                     }
                 }
                 console.log('splice on index ' + i);
-                results.splice(i, 0, feature);
+                result.splice(i, 0, feature);
                 map[feature.properties.NAMN] = dist;
             }    
         });
 
-        // Slice down the results to fit request
-        results = results.slice(0, n);
+        // Slice down the result to fit request
+        result = result.slice(0, n);
 
         ids = [];
-        results.forEach(thing => {
+        result.forEach(thing => {
             ids.push(thing.id);
         });
-
-        
-        return ids;
+        // let o = {ids};
+        // return o;
+        return { result: result };
     })
     .catch((error) => {
         console.log(error)
-        res.status(500).send(error)
+        return error;
     })
 
 })
-
 
 exports.getWithinDistanceRequest = functions.https.onRequest((req, res) => {
     
@@ -215,7 +242,7 @@ exports.getWithinDistanceRequest = functions.https.onRequest((req, res) => {
         return features;
     })
     .then(features => {
-        let results = [];
+        let result = [];
         let map = new Map();
 
         features.forEach(feature => {
@@ -226,20 +253,20 @@ exports.getWithinDistanceRequest = functions.https.onRequest((req, res) => {
 
             if (dist <= maxDistance) {
                 let i = 0;
-                for (; i < results.length; i++) {
-                    let tmpName = results[i].properties.NAMN;
+                for (; i < result.length; i++) {
+                    let tmpName = result[i].properties.NAMN;
                     if (dist <= map[tmpName]) {
                         break;
                     }
                 }
                 console.log('splice on index ' + i);
-                results.splice(i, 0, feature);
+                result.splice(i, 0, feature);
                 map[feature.properties.NAMN] = dist;
             }    
         });
 
         ids = [];
-        results.forEach(thing => {
+        result.forEach(thing => {
             ids.push(thing.id);
         });
 
@@ -252,19 +279,19 @@ exports.getWithinDistanceRequest = functions.https.onRequest((req, res) => {
     })
 });
 
-exports.getWithinDistanceCall = functions.https.onCall((req, res) => {
+exports.getWithinDistanceCall = functions.https.onCall((data, res) => {
     
-    if(!req.body.lat || !req.body.long) {
+    if(!data.lat || !data.long) {
         res.sendStatus(400);
     }
     
-    let lat = parseFloat(req.body.lat);
-    let long = parseFloat(req.body.long);
-    let maxDistance = parseFloat(req.body.distance);
+    let lat = parseFloat(data.lat);
+    let long = parseFloat(data.long);
+    let maxDistance = parseFloat(data.distance);
     
     let ref = admin.firestore().collection('badlocations').where('feature.properties.KMN_NAMN', "==", "Stockholm");
 
-    let data = ref.get()
+    let useless = ref.get()
     .then(locations => {
         let features = []
         locations.forEach(document => {
@@ -302,8 +329,8 @@ exports.getWithinDistanceCall = functions.https.onCall((req, res) => {
             ids.push(thing.id);
         });
 
-        // res.status(200).send(ids);
-        return ids; // welp
+        let o = { ids };
+        return o;
     })
     .catch((error) => {
         console.log(error)
