@@ -22,7 +22,6 @@ exports.fetchTopRatedCall = functions.https.onCall((data, context) => {
     return o;
 });
 
-
 // Returns ID for badplats with highest meassured temperature.
 exports.getHighestTempCall = functions.https.onCall((data, context) => {
     let ref = admin.firestore().collection('badlocations').where('feature.properties.KMN_NAMN', "==", "Stockholm");
@@ -91,7 +90,6 @@ exports.getHighestTempRequest = functions.https.onRequest((req, res) => {
         res.status(500).send(error)
     })
 });
-
 
 // Returns n closest badplatser.
 exports.getClosestRequest = functions.https.onRequest((req, res) => { 
@@ -279,11 +277,8 @@ exports.getWithinDistanceRequest = functions.https.onRequest((req, res) => {
     })
 });
 
-exports.getWithinDistanceCall = functions.https.onCall((data, res) => {
-    
-    if(!data.lat || !data.long) {
-        res.sendStatus(400);
-    }
+exports.getWithinDistanceCall = functions.https.onCall((data, context) => {
+
     
     let lat = parseFloat(data.lat);
     let long = parseFloat(data.long);
@@ -334,7 +329,6 @@ exports.getWithinDistanceCall = functions.https.onCall((data, res) => {
     })
     .catch((error) => {
         console.log(error)
-        res.status(500).send(error)
     })
 });
 
@@ -354,5 +348,63 @@ function distance(lat1, long1, lat2, long2) {
     dist = dist * 1.609344;
 
     return dist;
-}  
+}
 
+// Returns array of relevant image URL's.
+exports.getImagesRequest = functions.https.onRequest((req, res) => {
+    let n = req.body.n || 3;
+    let id = req.body.id;
+
+    let ref = admin.firestore().collection('badimages').where('id', "==", id);
+
+    let useless = ref.get()
+    .then(document => {
+        let info = [];
+        document.forEach(col => {
+            console.log('col: ' + col);
+            const { information } = col.data();
+            info.push(information);
+        });
+        return info[0]; // It should just be one value right now. TODO fix it wtf
+    })
+    .then(information => {
+        images = information.images;
+        console.log('images: ' + images);
+        images = images.slice(0,n);
+        res.status(200).send(images);
+        return images; // welp
+    })
+    .catch((error) => {
+        console.log(error)
+        res.status(500).send(error)
+    })
+});
+
+// Returns array of relevant image URL's.
+exports.getImagesCall = functions.https.onCall((data, context) => {
+    let n = data.n || 3;
+    let id = data.id;
+
+    let ref = admin.firestore().collection('badimages').where('id', "==", id);
+
+    let useless = ref.get()
+    .then(document => {
+        let info = [];
+        document.forEach(col => {
+            console.log('col: ' + col);
+            const { information } = col.data();
+            info.push(information);
+        });
+        return info[0];
+    })
+    .then(information => {
+        images = information.images;
+        console.log('images: ' + images);
+        images = images.slice(0,n);
+        return {images : images };
+    })
+    .catch((error) => {
+        console.log(error)
+        res.status(500).send(error)
+    })
+});
