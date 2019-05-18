@@ -408,3 +408,27 @@ exports.getImagesCall = functions.https.onCall((data, context) => {
         res.status(500).send(error)
     })
 });
+
+// Returns id of most upvoted badplats.
+exports.getMostUpvotedRequest = functions.https.onRequest((req, res) => {
+    let ref = admin.firestore().collection('upvotes');
+
+    let useless = ref.get()
+    .then(documents => {
+        let mostVotes;
+        let mostVotesID;
+        documents.forEach(col => {
+            const { upvotes } = col.data();
+            if (upvotes > mostVotes || !mostVotes) {
+                mostVotes = upvotes;
+                mostVotesID = col._ref._path.segments[1]; // Will this work?
+            }
+        });
+        res.status(200).send(mostVotesID);
+        return mostVotesID;
+    })
+    .catch((error) => {
+        console.log(error)
+        res.status(500).send(error)
+    })
+});
