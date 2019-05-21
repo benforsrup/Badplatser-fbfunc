@@ -5,23 +5,6 @@ admin.initializeApp(functions.config().firebase);
 // // Create and Deploy Your First Cloud Functions
 // // https://firebase.google.com/docs/functions/write-firebase-functions
 
-//response.send({object})
-// postman friendly
-exports.fetchTopRatedRequest = functions.https.onRequest((request, response) => {
-    let o = {
-        text: 'testing'
-    }
-    response.send(o);
-});
-
-//returnera object
-exports.fetchTopRatedCall = functions.https.onCall((data, context) => {
-    let o = {
-        text: 'testing'
-    }
-    return o;
-});
-
 // Returns ID for badplats with highest meassured temperature.
 exports.getHighestTempCall = functions.https.onCall((data, context) => {
     let ref = admin.firestore().collection('badlocations').where('feature.properties.KMN_NAMN', "==", "Stockholm");
@@ -47,11 +30,10 @@ exports.getHighestTempCall = functions.https.onCall((data, context) => {
         return maxTempID;
     })
     .then(maxTempID => {
-        // console.log('Maxtemp stuff: ' + maxTempID + ', ' + temps[maxTempID]);
         return { result: maxTempID };
     })
     .catch((error) => {
-        console.log(error)
+        console.log(error);
         return error;
     })
 });
@@ -81,13 +63,12 @@ exports.getHighestTempRequest = functions.https.onRequest((req, res) => {
         return maxTempID;
     })
     .then(maxTempID => {
-        // console.log('Maxtemp stuff: ' + maxTempID + ', ' + temps[maxTempID]);
         res.status(200).send(maxTempID);
         return maxTempID;
     })
     .catch((error) => {
-        console.log(error)
-        res.status(500).send(error)
+        console.log(error);
+        res.status(500).send(error);
     })
 });
 
@@ -107,10 +88,10 @@ exports.getClosestRequest = functions.https.onRequest((req, res) => {
 
     let data = ref.get()
     .then(locations => {
-        let features = []
+        let features = [];
         locations.forEach(document => {
-            const { feature } = document.data()
-            features.push(feature)
+            const { feature } = document.data();
+            features.push(feature);
         });
         return features;
     })
@@ -147,11 +128,11 @@ exports.getClosestRequest = functions.https.onRequest((req, res) => {
         });
 
         res.status(200).send(ids);
-        return results; // welp
+        return results;
     })
     .catch((error) => {
-        console.log(error)
-        res.status(500).send(error)
+        console.log(error);
+        res.status(500).send(error);
     })
 
 })
@@ -169,10 +150,10 @@ exports.getClosestCall = functions.https.onCall((data, context) => {
 
     let useless = ref.get()
     .then(locations => {
-        let features = []
+        let features = [];
         locations.forEach(document => {
-            const { feature } = document.data()
-            features.push(feature)
+            const { feature } = document.data();
+            features.push(feature);
         });
         return features;
     })
@@ -207,15 +188,12 @@ exports.getClosestCall = functions.https.onCall((data, context) => {
         result.forEach(thing => {
             ids.push(thing.id);
         });
-        // let o = {ids};
-        // return o;
         return { result: result };
     })
     .catch((error) => {
-        console.log(error)
+        console.log(error);
         return error;
     })
-
 })
 
 exports.getWithinDistanceRequest = functions.https.onRequest((req, res) => {
@@ -234,8 +212,8 @@ exports.getWithinDistanceRequest = functions.https.onRequest((req, res) => {
     .then(locations => {
         let features = []
         locations.forEach(document => {
-            const { feature } = document.data()
-            features.push(feature)
+            const { feature } = document.data();
+            features.push(feature);
         });
         return features;
     })
@@ -269,17 +247,16 @@ exports.getWithinDistanceRequest = functions.https.onRequest((req, res) => {
         });
 
         res.status(200).send(ids);
-        return ids; // welp
+        return ids;
     })
     .catch((error) => {
-        console.log(error)
-        res.status(500).send(error)
+        console.log(error);
+        res.status(500).send(error);
     })
 });
 
 exports.getWithinDistanceCall = functions.https.onCall((data, context) => {
 
-    
     let lat = parseFloat(data.lat);
     let long = parseFloat(data.long);
     let maxDistance = parseFloat(data.distance);
@@ -328,7 +305,7 @@ exports.getWithinDistanceCall = functions.https.onCall((data, context) => {
         return o;
     })
     .catch((error) => {
-        console.log(error)
+        console.log(error);
     })
 });
 
@@ -345,14 +322,14 @@ function distance(lat1, long1, lat2, long2) {
     dist = Math.acos(dist);
     dist = dist * 180/Math.PI;
     dist = dist * 60 * 1.1515;
-    dist = dist * 1.609344;
+    dist = dist * 1.609344; // metric system (km)
 
     return dist;
 }
 
 // Returns array of relevant image URL's.
 exports.getImagesRequest = functions.https.onRequest((req, res) => {
-    let n = req.body.n || 3;
+    let n = req.body.n || 3; // Default value 3.
     let id = req.body.id;
 
     let ref = admin.firestore().collection('badimages').where('id', "==", id);
@@ -365,24 +342,24 @@ exports.getImagesRequest = functions.https.onRequest((req, res) => {
             const { information } = col.data();
             info.push(information);
         });
-        return info[0]; // It should just be one value right now. TODO fix it wtf
+        return info[0];
     })
     .then(information => {
         images = information.images;
         console.log('images: ' + images);
         images = images.slice(0,n);
         res.status(200).send(images);
-        return images; // welp
+        return images;
     })
     .catch((error) => {
-        console.log(error)
-        res.status(500).send(error)
+        console.log(error);
+        res.status(500).send(error);
     })
 });
 
 // Returns array of relevant image URL's.
 exports.getImagesCall = functions.https.onCall((data, context) => {
-    let n = data.n || 3;
+    let n = data.n || 3; // Default value 3.
     let id = data.id;
 
     let ref = admin.firestore().collection('badimages').where('id', "==", id);
@@ -404,8 +381,8 @@ exports.getImagesCall = functions.https.onCall((data, context) => {
         return {images : images };
     })
     .catch((error) => {
-        console.log(error)
-        res.status(500).send(error)
+        console.log(error);
+        res.status(500).send(error);
     })
 });
 
@@ -421,14 +398,14 @@ exports.getMostUpvotedRequest = functions.https.onRequest((req, res) => {
             const { upvotes } = col.data();
             if (upvotes > mostVotes || !mostVotes) {
                 mostVotes = upvotes;
-                mostVotesID = col._ref._path.segments[1]; // Will this work?
+                mostVotesID = col._ref._path.segments[1];
             }
         });
         res.status(200).send(mostVotesID);
         return mostVotesID;
     })
     .catch((error) => {
-        console.log(error)
-        res.status(500).send(error)
+        console.log(error);
+        res.status(500).send(error);
     })
 });
