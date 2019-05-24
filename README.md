@@ -42,7 +42,7 @@ returns a list of all bathing locations within specified distance, sorted in asc
     - maxDistance   -   Specifies a distance for the query in kilometers. Limits query distance by ignoring all results outside the range.
 
 
-- `getHighestTempCall`
+- `getHighestTempRequest`
 returns id for bathing location with the highest meassured water temperature. NOTE: Many places in the Stockholm area could be missing up-to-date values for water temperature.
 
 
