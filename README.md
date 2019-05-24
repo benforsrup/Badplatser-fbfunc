@@ -10,8 +10,10 @@ You will also need to be a member of the Firebase project and have appropriate p
 
 
 ## Get started
-Start off by signing in to your Google account connected to the project through the Firebase CLI.
+Start off by cloning the repo and signing in to your Google account connected to the project through the Firebase CLI.
 ```shell
+$ git clone https://github.com/benforsrup/Badplatser-fbfunc.git
+$ cd Badplatser-fbfunc
 $ firebase login
 ```
 Once this is done you will be able to easily deploy any new functionality directly to the Firebase project.
