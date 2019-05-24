@@ -30,16 +30,16 @@ The functions supporting HTTP POST request take indata in JSON format attached t
 
 -  `getClosestRequest`
 returns a list of n closest bathing locations sorted in ascending order based on distance from base point. Input data: 
-- lat      -       latitude of base point for the query.
-- long     -       longitude of base point for the query.
-- n        -       max number of results to return.
-- maxDistance  -   Specifies a max distance for the query in kilometers. Limits query distance by ignoring all results outside the range.
+    - lat      -       latitude of base point for the query.
+    - long     -       longitude of base point for the query.
+    - n        -       max number of results to return.
+    - maxDistance  -   Specifies a max distance for the query in kilometers. Limits query distance by ignoring all results outside the range.
 
 -  `getWithinDistanceRequest`
 returns a list of all bathing locations within specified distance, sorted in ascending order based on distance from base point. Input data: 
-- lat         -     latitude of base point for the query.
-- long         -    longitude of base point for the query.
-- maxDistance   -   Specifies a distance for the query in kilometers. Limits query distance by ignoring all results outside the range.
+    - lat         -     latitude of base point for the query.
+    - long         -    longitude of base point for the query.
+    - maxDistance   -   Specifies a distance for the query in kilometers. Limits query distance by ignoring all results outside the range.
 
 
 - `getHighestTempCall`
@@ -48,5 +48,5 @@ returns id for bathing location with the highest meassured water temperature. NO
 
 - `getImagesRequest`
 returns up to n number of image URL:s from specified bathing location. If the requested number of images exceed the available number, all available will be returned. Input data:
-- bathing   -    location ID
-- n         -    number of images returned
+    - bathing   -    location ID
+    - n         -    number of images returned
